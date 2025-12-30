@@ -13,23 +13,48 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <!-- Lucide Icons (UMD) -->
     <script src="https://unpkg.com/lucide@0.292.0"></script>
+    <style>
+        /* Smooth scrolling for the whole page */
+        html { scroll-behavior: smooth; }
+        /* Custom fade-in animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+    </style>
 </head>
-<body class="bg-slate-50">
+<body class="bg-slate-50 text-slate-900">
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef } = React;
         
         // --- Icon Wrapper for CDN Usage ---
         const Icon = ({ name, size = 16, className = "" }) => {
+            const iconRef = useRef(null);
             useEffect(() => {
-                if (window.lucide) window.lucide.createIcons();
-            }, [name]);
-
-            return <i data-lucide={name} width={size} height={size} className={className}></i>;
+                const timer = setTimeout(() => {
+                    if (window.lucide) {
+                        window.lucide.createIcons({
+                            root: iconRef.current ? iconRef.current.parentNode : document,
+                            name: name,
+                            attrs: { width: size, height: size, class: className }
+                        });
+                    }
+                }, 0);
+                return () => clearTimeout(timer);
+            }, [name, size, className]);
+            return (
+                <span ref={iconRef}>
+                    <i data-lucide={name} width={size} height={size} className={className}></i>
+                </span>
+            );
         };
 
-        // Icon Components mapping
+        // --- Icon Mappings ---
         const Shield = (props) => <Icon name="shield" {...props} />;
         const Users = (props) => <Icon name="users" {...props} />;
         const Award = (props) => <Icon name="award" {...props} />;
@@ -51,7 +76,7 @@
         const Briefcase = (props) => <Icon name="briefcase" {...props} />;
         const Search = (props) => <Icon name="search" {...props} />;
 
-        // --- Mock Data ---
+        // --- DATA SECTION: EDIT BELOW THIS LINE TO MANAGE SITE ---
 
         const NAV_ITEMS = [
             { id: 'home', label: 'Home', icon: <Shield className="w-4 h-4" /> },
@@ -63,14 +88,36 @@
             { id: 'calendar', label: 'Calendar', icon: <Calendar className="w-4 h-4" /> },
         ];
 
+        // --- ANNOUNCEMENTS (Home Page) ---
+        // Tip: Paste a Google Form link in the 'link' field for class sign-ups.
         const ANNOUNCEMENTS = [
-            { id: 1, title: 'CFDC 300 Registration Open', date: 'Oct 15, 2023', type: 'Training' },
-            { id: 2, title: 'New GPC Reading List Added', date: 'Oct 12, 2023', type: 'Strategic' },
-            { id: 3, title: 'Officer Promotion Board (Maj-Lt Col)', date: 'Oct 05, 2023', type: 'Admin' },
+            { 
+                id: 1, 
+                title: 'CFDC 300 Registration Open', 
+                date: 'Oct 15, 2023', 
+                type: 'Training',
+                link: 'https://forms.google.com/example-signup' // Replace with your form link
+            },
+            { 
+                id: 2, 
+                title: 'New GPC Reading List Added', 
+                date: 'Oct 12, 2023', 
+                type: 'Strategic',
+                link: '' // Leave empty if just an announcement
+            },
+            { 
+                id: 3, 
+                title: 'Officer Promotion Board (Maj-Lt Col)', 
+                date: 'Oct 05, 2023', 
+                type: 'Admin',
+                link: '#'
+            },
         ];
 
+        // --- RESOURCES ---
+        // To add a file: Upload PDF to GitHub, click it to get the "Raw" link, paste link here.
         const RESOURCES = [
-            { id: '1', title: 'AFI 36-2618 (The Enlisted Force Structure)', category: 'Regulations', type: 'PDF', description: 'The "Little Brown Book" defining expectations.' },
+            { id: '1', title: 'AFI 36-2618 (Enlisted Force Structure)', category: 'Regulations', type: 'PDF', description: 'The "Little Brown Book" defining expectations.' },
             { id: '2', title: 'Airman Leadership Qualities (ALQs)', category: 'ALQs', type: 'Link', description: 'Interactive guide to the new ALQ evaluation standards.' },
             { id: '3', title: 'CSAF Reading List', category: 'Reading', type: 'Link', description: 'Books recommended by the Chief of Staff.' },
             { id: '4', title: 'GPC: China & Russia Context', category: 'Videos', type: 'Video', description: 'Briefing on the current strategic environment.' },
@@ -79,6 +126,15 @@
             { id: '7', title: 'AFH 1 (The Airman Handbook)', category: 'Reading', type: 'PDF', description: 'Study material for promotion testing.' },
             { id: '8', title: 'MyEval 2.0 Guide', category: 'Regulations', type: 'PDF', description: 'How to navigate the new evaluation system.' },
         ];
+
+        // --- CALENDAR EVENTS ---
+        const EVENTS = [
+            { date: '14 OCT', title: 'UTA Weekend', time: '0700 - 1600', location: 'Base Wide' },
+            { date: '21 OCT', title: 'PT Tests', time: '0800 - 1100', location: 'Running Track' },
+            { date: '01 NOV', title: 'Promotion Ceremony', time: '1400 - 1500', location: 'Hangar 3' },
+        ];
+
+        // --- DATA SECTION END ---
 
         const ENLISTED_TIERS = [
             { 
@@ -161,10 +217,10 @@
             const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
             const [searchTerm, setSearchTerm] = useState('');
 
+            // Reset scroll when tab changes
             useEffect(() => {
                 window.scrollTo(0, 0);
-                if (window.lucide) window.lucide.createIcons();
-            }, [activeTab, mobileMenuOpen]);
+            }, [activeTab]);
 
             const renderContent = () => {
                 switch (activeTab) {
@@ -180,18 +236,18 @@
             };
 
             return (
-                <div className="min-h-screen bg-slate-50 font-sans text-slate-900 flex flex-col">
+                <div className="min-h-screen flex flex-col">
                     {/* Navigation */}
-                    <nav className="sticky top-0 z-50 bg-blue-900 text-white shadow-lg">
-                        <div className="w-full max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+                    <nav className="sticky top-0 z-50 bg-blue-900 text-white shadow-xl">
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                             <div className="flex items-center justify-between h-16">
-                                <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('home')}>
-                                    <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-md border-2 border-blue-800">
-                                        <Shield size={16} className="text-blue-900" />
+                                <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => setActiveTab('home')}>
+                                    <div className="w-9 h-9 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg border-2 border-blue-800 group-hover:scale-110 transition-transform">
+                                        <Shield size={18} className="text-blue-900" />
                                     </div>
-                                    <div>
-                                        <h1 className="font-bold text-lg leading-tight tracking-wide">CA ANG</h1>
-                                        <p className="text-[10px] text-blue-200 uppercase tracking-widest">Force Development</p>
+                                    <div className="flex flex-col">
+                                        <span className="font-bold text-lg leading-tight tracking-wide">CA ANG</span>
+                                        <span className="text-[10px] text-blue-200 uppercase tracking-widest font-semibold">Force Development</span>
                                     </div>
                                 </div>
                                 
@@ -201,10 +257,12 @@
                                         <button
                                             key={item.id}
                                             onClick={() => setActiveTab(item.id)}
-                                            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center space-x-2
-                                                ${activeTab === item.id ? 'bg-blue-800 text-white shadow-inner' : 'text-blue-100 hover:bg-blue-800 hover:text-white'}`}
+                                            className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center space-x-2
+                                                ${activeTab === item.id 
+                                                    ? 'bg-blue-800 text-white shadow-inner scale-105' 
+                                                    : 'text-blue-100 hover:bg-blue-800 hover:text-white hover:scale-105'}`}
                                         >
-                                            {item.icon}
+                                            <span className="opacity-90">{item.icon}</span>
                                             <span>{item.label}</span>
                                         </button>
                                     ))}
@@ -214,7 +272,7 @@
                                 <div className="lg:hidden">
                                     <button 
                                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                                        className="p-2 rounded-md text-blue-200 hover:text-white focus:outline-none"
+                                        className="p-2 rounded-md text-blue-200 hover:text-white hover:bg-blue-800 focus:outline-none transition-colors"
                                     >
                                         {mobileMenuOpen ? <X size={24} /> : <MenuIcon size={24} />}
                                     </button>
@@ -224,7 +282,7 @@
 
                         {/* Mobile Nav Drawer */}
                         {mobileMenuOpen && (
-                            <div className="lg:hidden bg-blue-800 border-t border-blue-700">
+                            <div className="lg:hidden bg-blue-800 border-t border-blue-700 animate-fade-in">
                                 <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
                                     {NAV_ITEMS.map((item) => (
                                         <button
@@ -233,8 +291,8 @@
                                                 setActiveTab(item.id);
                                                 setMobileMenuOpen(false);
                                             }}
-                                            className={`block w-full text-left px-3 py-4 rounded-md text-base font-medium flex items-center space-x-3
-                                                ${activeTab === item.id ? 'bg-blue-900 text-white' : 'text-blue-100 hover:bg-blue-700 hover:text-white'}`}
+                                            className={`w-full text-left px-3 py-4 rounded-md text-base font-medium flex items-center space-x-4
+                                                ${activeTab === item.id ? 'bg-blue-900 text-white border-l-4 border-yellow-400' : 'text-blue-100 hover:bg-blue-700 hover:text-white'}`}
                                         >
                                             {item.icon}
                                             <span>{item.label}</span>
@@ -246,29 +304,35 @@
                     </nav>
 
                     {/* Main Content Area */}
-                    <main className="flex-grow">
+                    <main className="flex-grow w-full max-w-7xl mx-auto">
                         {renderContent()}
                     </main>
 
                     {/* Footer */}
-                    <footer className="bg-slate-900 text-slate-400 py-8 border-t border-slate-800">
-                        <div className="w-full max-w-full mx-auto px-4 text-center">
-                            <div className="flex flex-wrap justify-center space-x-6 mb-4">
-                                <button className="hover:text-white transition-colors">Strategic Documents</button>
-                                <button className="hover:text-white transition-colors">GPC</button>
-                                <button className="hover:text-white transition-colors">Contact Webmaster</button>
+                    <footer className="bg-slate-900 text-slate-400 py-10 border-t border-slate-800 mt-auto">
+                        <div className="max-w-7xl mx-auto px-4 text-center">
+                            <div className="mb-6 flex justify-center">
+                                <div className="p-3 bg-slate-800 rounded-full">
+                                    <Shield size={32} className="text-slate-600" />
+                                </div>
                             </div>
-                            <p className="text-sm">
-                                © {new Date().getFullYear()} California Air National Guard Force Development. 
-                                <br className="sm:hidden"/> Not an official DoD website. For demo purposes only.
-                            </p>
+                            <div className="flex flex-wrap justify-center gap-6 mb-8 text-sm font-medium">
+                                <button onClick={() => setActiveTab('strategy')} className="hover:text-white transition-colors">Strategic Documents</button>
+                                <button onClick={() => setActiveTab('cfdc')} className="hover:text-white transition-colors">CFDC Info</button>
+                                <button className="hover:text-white transition-colors">Privacy Policy</button>
+                                <button className="hover:text-white transition-colors">Accessibility</button>
+                            </div>
+                            <div className="text-xs text-slate-500 space-y-2">
+                                <p>© {new Date().getFullYear()} California Air National Guard Force Development.</p>
+                                <p>This website is for informational purposes only. Not an official U.S. Government or DoD website.</p>
+                            </div>
                         </div>
                     </footer>
                 </div>
             );
         }
 
-        // --- Sub-Views ---
+        // --- View Components ---
 
         function HomeView({ setActiveTab }) {
             const [userPersona, setUserPersona] = useState('Enlisted');
@@ -285,45 +349,48 @@
                         return [
                             { title: 'CGO Dev', icon: <Users className="text-blue-600" />, desc: '2Lt - Capt Focus', action: () => setActiveTab('officer') },
                             { title: 'FGO Dev', icon: <Shield className="text-blue-600" />, desc: 'Maj - Lt Col Focus', action: () => setActiveTab('officer') },
-                            { title: 'Development Calendar', icon: <Calendar className="text-blue-600" />, desc: 'Key Dates', action: () => setActiveTab('calendar') },
+                            { title: 'Dev Calendar', icon: <Calendar className="text-blue-600" />, desc: 'Key Dates & Boards', action: () => setActiveTab('calendar') },
                         ];
                 }
             };
 
             return (
-                <div className="animate-fade-in">
+                <div className="animate-fade-in pb-12">
                     {/* Hero Section */}
-                    <div className="bg-gradient-to-r from-blue-900 to-slate-800 text-white py-12 px-4 relative overflow-hidden">
+                    <div className="bg-gradient-to-r from-blue-900 to-slate-800 text-white py-16 px-4 relative overflow-hidden rounded-b-3xl shadow-xl mb-10">
                         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-white opacity-5 rounded-full blur-3xl"></div>
                         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-60 h-60 bg-yellow-400 opacity-5 rounded-full blur-3xl"></div>
                         
-                        <div className="w-full max-w-full mx-auto relative z-10 flex flex-col md:flex-row items-center justify-between">
-                            <div className="md:w-2/3 mb-8 md:mb-0">
+                        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between max-w-7xl mx-auto">
+                            <div className="md:w-2/3 mb-8 md:mb-0 text-center md:text-left">
                                 <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 leading-tight">
                                     Empowering California's <span className="text-yellow-400">Force</span>
                                 </h2>
-                                <p className="text-lg md:text-xl text-blue-100 mb-6 max-w-2xl leading-relaxed">
-                                    Your hub for Enlisted & Officer progression, Strategic Documents, and Great Power Competition resources.
+                                <p className="text-lg md:text-xl text-blue-100 mb-8 max-w-2xl leading-relaxed mx-auto md:mx-0">
+                                    Your central hub for Enlisted & Officer progression, Strategic Documents, and Great Power Competition resources.
                                 </p>
-                                <div className="flex gap-4">
-                                    <button onClick={() => setActiveTab('strategy')} className="bg-yellow-500 hover:bg-yellow-400 text-blue-900 px-6 py-2 rounded-lg font-bold transition-colors">
-                                        Explore GPC
+                                <div className="flex flex-wrap justify-center md:justify-start gap-4">
+                                    <button onClick={() => setActiveTab('strategy')} className="bg-yellow-500 hover:bg-yellow-400 text-blue-900 px-8 py-3 rounded-lg font-bold transition-all shadow-lg hover:shadow-yellow-500/20 flex items-center">
+                                        Explore GPC <ChevronRight size={18} className="ml-2"/>
+                                    </button>
+                                    <button onClick={() => setActiveTab('resources')} className="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-8 py-3 rounded-lg font-semibold transition-all backdrop-blur-sm">
+                                        Resource Library
                                     </button>
                                 </div>
                             </div>
                             
                             {/* Persona Selector */}
-                            <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/20 w-full md:w-auto">
-                                <p className="text-xs text-blue-200 uppercase font-bold mb-3 tracking-wider">I am an:</p>
-                                <div className="flex space-x-2">
+                            <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20 w-full md:w-auto shadow-2xl">
+                                <p className="text-xs text-blue-200 uppercase font-bold mb-4 tracking-wider text-center">Customize Your Dashboard</p>
+                                <div className="flex bg-blue-900/50 p-1 rounded-xl">
                                     {['Enlisted', 'Officer'].map((type) => (
                                         <button
                                             key={type}
                                             onClick={() => setUserPersona(type)}
-                                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all
+                                            className={`flex-1 px-6 py-3 rounded-lg text-sm font-bold transition-all duration-300
                                                 ${userPersona === type 
-                                                    ? 'bg-yellow-500 text-blue-900 shadow-lg scale-105' 
-                                                    : 'bg-blue-900/50 text-blue-100 hover:bg-blue-800'}`}
+                                                    ? 'bg-yellow-500 text-blue-900 shadow-lg' 
+                                                    : 'text-blue-200 hover:text-white'}`}
                                         >
                                             {type}
                                         </button>
@@ -333,62 +400,73 @@
                         </div>
                     </div>
 
-                    <div className="w-full max-w-full mx-auto px-4 py-8 space-y-12">
+                    <div className="px-4 space-y-12">
                         {/* Dynamic Quick Actions */}
-                        <div className="-mt-16 relative z-20">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                {getQuickLinks().map((card, idx) => (
-                                    <Card key={idx} className="hover:shadow-xl transition-shadow cursor-pointer group border-t-4 border-t-yellow-500">
-                                        <div className="p-6" onClick={card.action}>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {getQuickLinks().map((card, idx) => (
+                                <Card key={idx} className="hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group border-t-4 border-t-yellow-500">
+                                    <div className="p-6 h-full flex flex-col justify-between" onClick={card.action}>
+                                        <div>
                                             <div className="flex items-center justify-between mb-4">
-                                                <div className="p-3 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
+                                                <div className="p-3 bg-blue-50 rounded-xl group-hover:bg-blue-100 transition-colors">
                                                     {card.icon}
                                                 </div>
                                                 <ChevronRight className="text-gray-300 group-hover:text-blue-500 transition-colors" />
                                             </div>
-                                            <h3 className="text-xl font-bold text-slate-800 mb-2">{card.title}</h3>
+                                            <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-blue-700 transition-colors">{card.title}</h3>
                                             <p className="text-slate-500 text-sm">{card.desc}</p>
                                         </div>
-                                    </Card>
-                                ))}
-                            </div>
+                                    </div>
+                                </Card>
+                            ))}
                         </div>
 
-                        {/* Announcements */}
+                        {/* Announcements & Secondary Info */}
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             <div className="lg:col-span-2">
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="flex items-center space-x-2">
-                                        <Bell className="text-blue-600" />
+                                        <Bell className="text-blue-600 fill-current" size={20} />
                                         <h3 className="text-2xl font-bold text-slate-800">Latest Updates</h3>
                                     </div>
-                                    <button className="text-sm text-blue-600 font-medium hover:underline" onClick={() => setActiveTab('calendar')}>View Calendar</button>
+                                    <button className="text-sm text-blue-600 font-bold hover:underline" onClick={() => setActiveTab('calendar')}>View All Events</button>
                                 </div>
                                 <div className="space-y-4">
                                     {ANNOUNCEMENTS.map((item) => (
-                                        <div key={item.id} className="bg-white p-4 rounded-lg border-l-4 border-blue-600 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50 transition-colors">
+                                        <div key={item.id} className="bg-white p-5 rounded-xl border-l-4 border-blue-600 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-md transition-shadow">
                                             <div>
-                                                <div className="flex items-center space-x-2 mb-1">
+                                                <div className="flex items-center space-x-3 mb-2">
                                                     <Badge type={item.type}>{item.type}</Badge>
-                                                    <span className="text-xs text-slate-400 font-medium">{item.date}</span>
+                                                    <span className="text-xs text-slate-400 font-medium flex items-center"><Clock size={12} className="mr-1"/> {item.date}</span>
                                                 </div>
-                                                <h4 className="font-semibold text-slate-800">{item.title}</h4>
+                                                <h4 className="font-bold text-slate-800 text-lg">{item.title}</h4>
                                             </div>
-                                            <button className="text-sm text-blue-600 font-medium hover:underline whitespace-nowrap">Read More</button>
+                                            <a 
+                                                href={item.link || '#'} 
+                                                target={item.link ? "_blank" : "_self"}
+                                                className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors whitespace-nowrap 
+                                                    ${item.link ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-50 text-blue-600 hover:bg-blue-100 cursor-default'}`}
+                                            >
+                                                {item.link ? "Sign Up / View" : "Read More"}
+                                            </a>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                             
-                            {/* Quick Strategic Access */}
-                            <Card className="bg-slate-900 text-white border-none p-6 flex flex-col justify-center">
-                                <Globe className="text-blue-400 mb-4" size={32} />
-                                <h3 className="text-xl font-bold mb-2">Great Power Competition</h3>
-                                <p className="text-slate-300 text-sm mb-4">Understand the strategic environment. Access briefings and reading materials on China & Russia.</p>
-                                <button onClick={() => setActiveTab('strategy')} className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded transition-colors w-full">
-                                    Go to Strategic Hub
+                            {/* Strategic Card */}
+                            <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-8 shadow-xl flex flex-col justify-center h-full">
+                                <div className="mb-6 bg-white/10 w-14 h-14 rounded-2xl flex items-center justify-center">
+                                    <Globe className="text-blue-400" size={32} />
+                                </div>
+                                <h3 className="text-2xl font-bold mb-3">Great Power Competition</h3>
+                                <p className="text-slate-300 text-sm mb-8 leading-relaxed">
+                                    Understand the strategic environment. Access mandatory briefings, reading materials, and intelligence on peer competitors.
+                                </p>
+                                <button onClick={() => setActiveTab('strategy')} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-blue-900/50 flex items-center justify-center">
+                                    Access Strategic Hub <ChevronRight size={16} className="ml-2"/>
                                 </button>
-                            </Card>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -400,20 +478,20 @@
             const activeData = ENLISTED_TIERS.find(t => t.id === tier) || ENLISTED_TIERS[0];
 
             return (
-                <div className="w-full max-w-full mx-auto px-4 py-12">
-                    <div className="mb-8">
+                <div className="px-4 py-12 animate-fade-in">
+                    <div className="mb-10 text-center md:text-left">
                         <h2 className="text-3xl font-bold text-slate-900">Enlisted Development</h2>
-                        <p className="text-slate-500 mt-2">Comprehensive guide for Airman, NCO, and SNCO tiers.</p>
+                        <p className="text-slate-500 mt-2 text-lg">Comprehensive career guide for Airman, NCO, and SNCO tiers.</p>
                     </div>
 
                     {/* Tier Tabs */}
-                    <div className="flex border-b border-slate-200 mb-8">
+                    <div className="flex flex-wrap border-b border-slate-200 mb-10">
                         {ENLISTED_TIERS.map(t => (
                             <button
                                 key={t.id}
                                 onClick={() => setTier(t.id)}
-                                className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors
-                                    ${tier === t.id ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+                                className={`px-6 py-3 font-bold text-sm border-b-2 transition-all
+                                    ${tier === t.id ? 'border-blue-600 text-blue-600 bg-blue-50/50' : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}
                             >
                                 {t.title}
                             </button>
@@ -425,22 +503,25 @@
                         <div className="lg:col-span-2">
                             <Card className="p-8 h-full">
                                 <div className="flex items-center mb-6">
-                                    <div className="p-3 bg-blue-50 text-blue-600 rounded-lg mr-4">
+                                    <div className="p-3 bg-blue-50 text-blue-600 rounded-lg mr-4 shadow-sm">
                                         <Users size={28} />
                                     </div>
                                     <div>
                                         <h3 className="text-2xl font-bold text-slate-800">{activeData.title} Tier</h3>
-                                        <p className="text-slate-500">{activeData.focus}</p>
+                                        <p className="text-slate-500 font-medium">{activeData.focus}</p>
                                     </div>
                                 </div>
                                 
-                                <p className="text-slate-600 mb-8 text-lg">{activeData.desc}</p>
+                                <p className="text-slate-600 mb-8 text-lg leading-relaxed">{activeData.desc}</p>
                                 
-                                <h4 className="font-bold text-slate-900 mb-4 border-b pb-2">Key Requirements & PME</h4>
+                                <h4 className="font-bold text-slate-900 mb-4 border-b pb-2 flex items-center">
+                                    <CheckCircle size={18} className="mr-2 text-blue-600"/>
+                                    Key Requirements & PME
+                                </h4>
                                 <ul className="space-y-4">
                                     {activeData.reqs.map((req, i) => (
-                                        <li key={i} className="flex items-center p-3 bg-slate-50 rounded-lg border border-slate-100">
-                                            <CheckCircle className="text-green-500 mr-3" size={20} />
+                                        <li key={i} className="flex items-center p-4 bg-slate-50 rounded-lg border border-slate-100 hover:border-blue-200 transition-colors">
+                                            <div className="w-2 h-2 rounded-full bg-green-500 mr-4 shrink-0"></div>
                                             <span className="font-medium text-slate-700">{req}</span>
                                         </li>
                                     ))}
@@ -449,12 +530,12 @@
                         </div>
 
                         {/* Ranks Sidebar */}
-                        <div>
-                            <div className="bg-slate-100 rounded-xl p-6">
+                        <div className="space-y-6">
+                            <div className="bg-slate-100/50 rounded-2xl p-6 border border-slate-200">
                                 <h4 className="font-bold text-slate-700 mb-4 uppercase text-xs tracking-wider">Ranks in this Tier</h4>
                                 <div className="space-y-3">
                                     {activeData.ranks.map(rank => (
-                                        <div key={rank} className="bg-white p-4 rounded shadow-sm border border-slate-200 flex items-center justify-between">
+                                        <div key={rank} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between group cursor-default">
                                             <span className="font-bold text-slate-800">{rank}</span>
                                             <ChevronRight size={16} className="text-slate-300" />
                                         </div>
@@ -462,10 +543,14 @@
                                 </div>
                             </div>
                             
-                            <div className="mt-6 bg-blue-900 text-white rounded-xl p-6">
-                                <h4 className="font-bold mb-2">Need a Mentor?</h4>
-                                <p className="text-sm text-blue-200 mb-4">Connect with senior leadership in your tier for guidance.</p>
-                                <button className="w-full bg-blue-700 hover:bg-blue-600 py-2 rounded text-sm font-semibold transition-colors">Find Mentor</button>
+                            <div className="bg-gradient-to-br from-blue-900 to-blue-800 text-white rounded-2xl p-6 shadow-lg">
+                                <h4 className="font-bold mb-2 text-lg">Need Mentorship?</h4>
+                                <p className="text-sm text-blue-100 mb-6 leading-relaxed">
+                                    Guidance from senior leadership is crucial at the {activeData.title} level.
+                                </p>
+                                <button className="w-full bg-white text-blue-900 py-3 rounded-lg text-sm font-bold hover:bg-blue-50 transition-colors shadow-md">
+                                    Find a Mentor
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -478,27 +563,27 @@
             const activeData = OFFICER_TIERS.find(t => t.id === activeGroup) || OFFICER_TIERS[0];
 
             return (
-                <div className="w-full max-w-full mx-auto px-4 py-12">
-                    <div className="text-center mb-10">
+                <div className="px-4 py-12 animate-fade-in">
+                    <div className="text-center mb-12">
                         <h2 className="text-3xl font-bold text-slate-900">Officer Development</h2>
-                        <p className="text-slate-500 mt-2">Pathways for 2Lt through Col.</p>
+                        <p className="text-slate-500 mt-2 text-lg">Strategic leadership pathways for 2Lt through Col.</p>
                     </div>
 
                     {/* Timeline Stepper */}
-                    <div className="grid grid-cols-3 gap-4 mb-10">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
                         {OFFICER_TIERS.map((tier) => (
                             <button 
                                 key={tier.id}
                                 onClick={() => setActiveGroup(tier.id)}
-                                className={`relative p-4 rounded-xl border-2 text-left transition-all
+                                className={`relative p-5 rounded-xl border-2 text-left transition-all duration-300
                                     ${activeGroup === tier.id 
-                                        ? 'border-blue-600 bg-blue-50 shadow-md' 
+                                        ? 'border-blue-600 bg-blue-50 shadow-md scale-[1.02]' 
                                         : 'border-slate-200 bg-white hover:border-blue-300'}`}
                             >
-                                <span className={`text-xs font-bold uppercase tracking-wider block mb-1 ${activeGroup === tier.id ? 'text-blue-600' : 'text-slate-400'}`}>
+                                <span className={`text-xs font-bold uppercase tracking-wider block mb-2 ${activeGroup === tier.id ? 'text-blue-600' : 'text-slate-400'}`}>
                                     {tier.ranks.join(' / ')}
                                 </span>
-                                <span className="font-bold text-slate-800 block">{tier.group}</span>
+                                <span className="font-bold text-slate-800 text-lg block">{tier.group}</span>
                             </button>
                         ))}
                     </div>
@@ -507,26 +592,31 @@
                         {/* Main Content */}
                         <div className="md:col-span-8">
                             <Card className="p-8 h-full">
-                                <div className="flex items-start justify-between mb-6">
+                                <div className="flex items-start justify-between mb-8">
                                     <div>
-                                        <h3 className="text-2xl font-bold text-slate-900 mb-1">{activeData.group} Officer</h3>
-                                        <p className="text-lg text-slate-500">{activeData.title}</p>
+                                        <h3 className="text-3xl font-bold text-slate-900 mb-2">{activeData.group}</h3>
+                                        <p className="text-lg text-blue-600 font-medium">{activeData.title}</p>
                                     </div>
-                                    <Award size={40} className="text-blue-100" />
+                                    <div className="p-3 bg-blue-50 rounded-xl">
+                                        <Award size={32} className="text-blue-600" />
+                                    </div>
                                 </div>
 
-                                <div className="prose prose-blue max-w-none mb-8 text-slate-600">
-                                    <p>
-                                        Focus Area: <strong className="text-slate-800">{activeData.focus}</strong>. 
+                                <div className="bg-slate-50 rounded-xl p-6 mb-8 border border-slate-100">
+                                    <h4 className="font-bold text-slate-900 mb-2 text-sm uppercase tracking-wide">Focus Area</h4>
+                                    <p className="text-slate-700 leading-relaxed">
+                                        <strong className="text-slate-900">{activeData.focus}</strong>. 
                                         At this stage, officers are expected to master their primary AFSC duties while beginning to lead smaller teams (Flights/Elements) or serve in staff positions.
                                     </p>
                                 </div>
 
-                                <h4 className="font-bold text-slate-900 mb-4 uppercase text-xs tracking-wider">Education & Milestones</h4>
+                                <h4 className="font-bold text-slate-900 mb-4 uppercase text-xs tracking-wider flex items-center">
+                                    <BookOpen size={14} className="mr-2"/> Education & Milestones
+                                </h4>
                                 <div className="grid gap-4">
                                     {activeData.requirements.map((req, i) => (
-                                        <div key={i} className="flex items-center p-4 bg-slate-50 rounded border border-slate-100">
-                                            <BookOpen size={20} className="text-blue-500 mr-4" />
+                                        <div key={i} className="flex items-center p-4 bg-white rounded-lg border border-slate-200 shadow-sm hover:border-blue-300 transition-colors">
+                                            <div className="w-1.5 h-12 bg-blue-500 rounded-full mr-4"></div>
                                             <span className="font-semibold text-slate-700">{req}</span>
                                         </div>
                                     ))}
@@ -536,14 +626,14 @@
 
                         {/* Specific Rank Links */}
                         <div className="md:col-span-4 space-y-4">
-                            <h4 className="font-bold text-slate-800">Specific Rank Info</h4>
+                            <h4 className="font-bold text-slate-800 ml-1">Specific Rank Info</h4>
                             {activeData.ranks.map(rank => (
-                                <div key={rank} className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:border-blue-400 cursor-pointer transition-colors group">
-                                    <div className="flex justify-between items-center">
-                                        <span className="font-bold text-slate-700 group-hover:text-blue-600">{rank}</span>
-                                        <ExternalLink size={16} className="text-slate-300 group-hover:text-blue-500" />
+                                <div key={rank} className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 hover:border-blue-400 hover:shadow-md cursor-pointer transition-all group">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="font-bold text-lg text-slate-700 group-hover:text-blue-600 transition-colors">{rank}</span>
+                                        <ExternalLink size={18} className="text-slate-300 group-hover:text-blue-500 transition-colors" />
                                     </div>
-                                    <p className="text-xs text-slate-400 mt-1">View grade-specific roles & responsibilities</p>
+                                    <p className="text-xs text-slate-400">View grade-specific roles & responsibilities</p>
                                 </div>
                             ))}
                         </div>
@@ -554,44 +644,48 @@
 
         function StrategyView() {
             return (
-                <div className="w-full max-w-full mx-auto px-4 py-12">
+                <div className="px-4 py-12 animate-fade-in">
                     <div className="mb-10">
                         <h2 className="text-3xl font-bold text-slate-900">Strategic & GPC</h2>
-                        <p className="text-slate-500 mt-2">Connecting tactical actions to strategic objectives.</p>
+                        <p className="text-slate-500 mt-2 text-lg">Connecting tactical actions to strategic objectives.</p>
                     </div>
 
                     <div className="grid lg:grid-cols-2 gap-8">
                         {/* GPC Section */}
-                        <div className="bg-slate-900 text-white rounded-2xl p-8 shadow-xl">
-                            <div className="flex items-center space-x-3 mb-6">
-                                <Globe className="text-blue-400" size={32} />
-                                <h3 className="text-2xl font-bold">Great Power Competition</h3>
-                            </div>
-                            <p className="text-slate-300 mb-6 leading-relaxed">
-                                The primary strategic challenge of our time. Understanding the capabilities, intent, and strategies of peer competitors (China & Russia) is essential for every Airman.
-                            </p>
-                            
-                            <div className="space-y-4">
-                                <button className="w-full flex items-center justify-between bg-white/10 hover:bg-white/20 p-4 rounded-lg transition-colors border border-white/10">
-                                    <span className="font-semibold">China Strategic Context</span>
-                                    <ChevronRight className="text-blue-400" />
-                                </button>
-                                <button className="w-full flex items-center justify-between bg-white/10 hover:bg-white/20 p-4 rounded-lg transition-colors border border-white/10">
-                                    <span className="font-semibold">Russia Strategic Context</span>
-                                    <ChevronRight className="text-blue-400" />
-                                </button>
-                                <button className="w-full flex items-center justify-between bg-white/10 hover:bg-white/20 p-4 rounded-lg transition-colors border border-white/10">
-                                    <span className="font-semibold">Agile Combat Employment (ACE)</span>
-                                    <ChevronRight className="text-blue-400" />
-                                </button>
+                        <div className="bg-slate-900 text-white rounded-2xl p-8 shadow-xl relative overflow-hidden">
+                            <div className="relative z-10">
+                                <div className="flex items-center space-x-3 mb-6">
+                                    <div className="p-2 bg-blue-500/20 rounded-lg">
+                                        <Globe className="text-blue-400" size={32} />
+                                    </div>
+                                    <h3 className="text-2xl font-bold">Great Power Competition</h3>
+                                </div>
+                                <p className="text-slate-300 mb-8 leading-relaxed text-lg">
+                                    The primary strategic challenge of our time. Understanding the capabilities, intent, and strategies of peer competitors (China & Russia) is essential for every Airman.
+                                </p>
+                                
+                                <div className="space-y-4">
+                                    <button className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 p-5 rounded-xl transition-colors border border-white/10 group">
+                                        <span className="font-semibold text-lg">China Strategic Context</span>
+                                        <ChevronRight className="text-blue-400 group-hover:translate-x-1 transition-transform" />
+                                    </button>
+                                    <button className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 p-5 rounded-xl transition-colors border border-white/10 group">
+                                        <span className="font-semibold text-lg">Russia Strategic Context</span>
+                                        <ChevronRight className="text-blue-400 group-hover:translate-x-1 transition-transform" />
+                                    </button>
+                                    <button className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 p-5 rounded-xl transition-colors border border-white/10 group">
+                                        <span className="font-semibold text-lg">Agile Combat Employment</span>
+                                        <ChevronRight className="text-blue-400 group-hover:translate-x-1 transition-transform" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
                         {/* Strategic Docs Section */}
                         <div>
-                            <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center justify-between mb-6 px-1">
                                 <h3 className="text-xl font-bold text-slate-800">Strategic Documents</h3>
-                                <button className="text-sm text-blue-600 font-bold hover:underline">View All</button>
+                                <button className="text-sm text-blue-600 font-bold hover:underline">View All Archive</button>
                             </div>
                             <div className="space-y-4">
                                 {[
@@ -600,12 +694,14 @@
                                     { title: 'Air Force Future Operating Concept', year: '2023' },
                                     { title: 'CA ANG Strategic Vision', year: '2024' }
                                 ].map((doc, i) => (
-                                    <Card key={i} className="hover:border-blue-400 cursor-pointer transition-colors">
-                                        <div className="p-4 flex items-center space-x-4">
-                                            <FileText className="text-red-500" size={24} />
+                                    <Card key={i} className="hover:border-blue-400 cursor-pointer transition-colors group">
+                                        <div className="p-5 flex items-start space-x-4">
+                                            <div className="bg-red-50 p-3 rounded-lg group-hover:bg-red-100 transition-colors">
+                                                <FileText className="text-red-500" size={24} />
+                                            </div>
                                             <div>
-                                                <h4 className="font-bold text-slate-800">{doc.title}</h4>
-                                                <p className="text-xs text-slate-500">Released: {doc.year} • PDF Download</p>
+                                                <h4 className="font-bold text-slate-800 text-lg group-hover:text-blue-700 transition-colors">{doc.title}</h4>
+                                                <p className="text-xs text-slate-500 mt-1 font-medium uppercase tracking-wide">Released: {doc.year} • PDF Download</p>
                                             </div>
                                         </div>
                                     </Card>
@@ -619,66 +715,66 @@
 
         function CFDCView() {
             return (
-                <div className="w-full max-w-full mx-auto px-4 py-12">
+                <div className="px-4 py-12 animate-fade-in">
                     <div className="mb-10 text-center">
                         <h2 className="text-3xl font-bold text-slate-900">Programs & Councils</h2>
-                        <p className="text-slate-500 mt-2">California Force Development Council & Organization</p>
+                        <p className="text-slate-500 mt-2 text-lg">California Force Development Council & Organization</p>
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-8">
-                        <Card className="overflow-hidden">
-                            <div className="bg-blue-900 text-white p-6">
-                                <div className="flex justify-between items-center">
-                                    <h3 className="text-xl font-bold">CFDC 300</h3>
-                                    <Target className="text-yellow-400" size={24} />
+                        <Card className="overflow-hidden flex flex-col h-full">
+                            <div className="bg-blue-900 text-white p-8">
+                                <div className="flex justify-between items-center mb-2">
+                                    <h3 className="text-2xl font-bold">CFDC 300</h3>
+                                    <Target className="text-yellow-400" size={28} />
                                 </div>
-                                <p className="text-blue-200 text-sm mt-2">Advanced Development Course</p>
+                                <p className="text-blue-200 font-medium">Advanced Development Course</p>
                             </div>
-                            <div className="p-6">
-                                <p className="text-slate-600 mb-6">
+                            <div className="p-8 flex-grow flex flex-col">
+                                <p className="text-slate-600 mb-8 leading-relaxed text-lg">
                                     A premier course designed to broaden the perspective of mid-tier officers and enlisted leaders on California specific operations and strategic initiatives.
                                 </p>
-                                <div className="space-y-3 mb-6">
-                                    <div className="flex items-center text-sm text-slate-700">
-                                        <CheckCircle size={16} className="text-green-500 mr-2" />
-                                        Target Audience: TSgt-MSgt / Capt-Maj
+                                <div className="space-y-4 mb-8">
+                                    <div className="flex items-center text-slate-700 bg-slate-50 p-3 rounded-lg">
+                                        <CheckCircle size={20} className="text-green-500 mr-3" />
+                                        <span className="font-semibold">Target Audience:</span>&nbsp;TSgt-MSgt / Capt-Maj
                                     </div>
-                                    <div className="flex items-center text-sm text-slate-700">
-                                        <CheckCircle size={16} className="text-green-500 mr-2" />
-                                        Length: 3 Days (In-Residence)
+                                    <div className="flex items-center text-slate-700 bg-slate-50 p-3 rounded-lg">
+                                        <CheckCircle size={20} className="text-green-500 mr-3" />
+                                        <span className="font-semibold">Length:</span>&nbsp;3 Days (In-Residence)
                                     </div>
                                 </div>
-                                <button className="w-full py-2 bg-blue-100 text-blue-700 font-bold rounded hover:bg-blue-200 transition-colors">
-                                    View Course Dates
+                                <button className="w-full mt-auto py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200">
+                                    View Course Dates & Register
                                 </button>
                             </div>
                         </Card>
 
-                        <Card className="overflow-hidden">
-                            <div className="bg-slate-800 text-white p-6">
-                                <div className="flex justify-between items-center">
-                                    <h3 className="text-xl font-bold">Councils</h3>
-                                    <Users className="text-yellow-400" size={24} />
+                        <Card className="overflow-hidden flex flex-col h-full">
+                            <div className="bg-slate-800 text-white p-8">
+                                <div className="flex justify-between items-center mb-2">
+                                    <h3 className="text-2xl font-bold">Councils</h3>
+                                    <Users className="text-yellow-400" size={28} />
                                 </div>
-                                <p className="text-slate-300 text-sm mt-2">Advisory & Development Boards</p>
+                                <p className="text-slate-300 font-medium">Advisory & Development Boards</p>
                             </div>
-                            <div className="p-6">
+                            <div className="p-8 flex-grow">
                                 <ul className="space-y-4">
-                                    <li className="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-100">
-                                        <span className="font-bold text-slate-700">Enlisted Advisory Council (EAC)</span>
-                                        <ChevronRight size={16} className="text-slate-300" />
+                                    <li className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-blue-300 transition-colors cursor-pointer group">
+                                        <span className="font-bold text-slate-700 group-hover:text-blue-700">Enlisted Advisory Council (EAC)</span>
+                                        <ChevronRight size={18} className="text-slate-300 group-hover:text-blue-500" />
                                     </li>
-                                    <li className="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-100">
-                                        <span className="font-bold text-slate-700">Company Grade Officers Council (CGOC)</span>
-                                        <ChevronRight size={16} className="text-slate-300" />
+                                    <li className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-blue-300 transition-colors cursor-pointer group">
+                                        <span className="font-bold text-slate-700 group-hover:text-blue-700">Company Grade Officers Council (CGOC)</span>
+                                        <ChevronRight size={18} className="text-slate-300 group-hover:text-blue-500" />
                                     </li>
-                                    <li className="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-100">
-                                        <span className="font-bold text-slate-700">Force Development Council</span>
-                                        <ChevronRight size={16} className="text-slate-300" />
+                                    <li className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-blue-300 transition-colors cursor-pointer group">
+                                        <span className="font-bold text-slate-700 group-hover:text-blue-700">Force Development Council</span>
+                                        <ChevronRight size={18} className="text-slate-300 group-hover:text-blue-500" />
                                     </li>
                                 </ul>
-                                <button className="w-full mt-6 py-2 bg-slate-100 text-slate-700 font-bold rounded hover:bg-slate-200 transition-colors">
-                                    View Charters
+                                <button className="w-full mt-8 py-3 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition-colors">
+                                    View Council Charters
                                 </button>
                             </div>
                         </Card>
@@ -699,19 +795,19 @@
             });
 
             return (
-                <div className="w-full max-w-full mx-auto px-4 py-12">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+                <div className="px-4 py-12 animate-fade-in">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
                         <div>
                             <h2 className="text-3xl font-bold text-slate-900">Resource Library</h2>
-                            <p className="text-slate-500 mt-1">Guidance, forms, and multimedia content.</p>
+                            <p className="text-slate-500 mt-2 text-lg">Guidance, forms, and multimedia content.</p>
                         </div>
                         
-                        <div className="relative md:w-80">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
+                        <div className="relative w-full md:w-96">
+                            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
                             <input 
                                 type="text" 
-                                placeholder="Search..." 
-                                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                                placeholder="Search resources..." 
+                                className="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all shadow-sm"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
@@ -719,15 +815,15 @@
                     </div>
 
                     {/* Category Pills */}
-                    <div className="flex flex-wrap gap-2 mb-8">
+                    <div className="flex flex-wrap gap-3 mb-10">
                         {categories.map(cat => (
                             <button
                                 key={cat}
                                 onClick={() => setActiveCategory(cat)}
-                                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all
+                                className={`px-5 py-2 rounded-full text-sm font-bold transition-all
                                     ${activeCategory === cat 
-                                        ? 'bg-blue-600 text-white shadow-md' 
-                                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}
+                                        ? 'bg-blue-600 text-white shadow-md shadow-blue-200' 
+                                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:border-slate-300'}`}
                             >
                                 {cat}
                             </button>
@@ -736,22 +832,22 @@
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredResources.map((res) => (
-                            <Card key={res.id} className="hover:border-blue-300 transition-colors group">
+                            <Card key={res.id} className="hover:border-blue-300 hover:shadow-lg transition-all duration-300 group h-full">
                                 <div className="p-6 h-full flex flex-col">
                                     <div className="flex justify-between items-start mb-4">
-                                        <span className={`px-2 py-1 rounded text-xs font-semibold
+                                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide
                                             ${res.category === 'Videos' ? 'bg-red-50 text-red-600' : 
                                                 res.type === 'Link' ? 'bg-blue-50 text-blue-600' : 
                                                 'bg-green-50 text-green-600'}`}>
                                             {res.type}
                                         </span>
-                                        <ExternalLink size={16} className="text-slate-300 group-hover:text-blue-500 transition-colors" />
+                                        <ExternalLink size={18} className="text-slate-300 group-hover:text-blue-500 transition-colors" />
                                     </div>
-                                    <h3 className="text-lg font-bold text-slate-800 mb-2">{res.title}</h3>
-                                    <p className="text-sm text-slate-500 flex-grow">{res.description}</p>
-                                    <div className="mt-4 pt-4 border-t border-slate-50 flex items-center justify-between">
-                                        <span className="text-xs text-slate-400 font-medium uppercase">{res.category}</span>
-                                        <button className="text-sm text-blue-600 font-medium hover:underline">Access</button>
+                                    <h3 className="text-lg font-bold text-slate-800 mb-2 group-hover:text-blue-700 transition-colors">{res.title}</h3>
+                                    <p className="text-sm text-slate-500 flex-grow leading-relaxed">{res.description}</p>
+                                    <div className="mt-6 pt-4 border-t border-slate-50 flex items-center justify-between">
+                                        <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">{res.category}</span>
+                                        <button className="text-sm text-blue-600 font-bold hover:underline">Access Resource</button>
                                     </div>
                                 </div>
                             </Card>
@@ -759,9 +855,13 @@
                     </div>
                     
                     {filteredResources.length === 0 && (
-                        <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-                            <p className="text-slate-400">No resources found matching your filters.</p>
-                            <button onClick={() => {setSearchTerm(''); setActiveCategory('All')}} className="mt-2 text-blue-600 font-semibold text-sm">Clear Filters</button>
+                        <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300">
+                            <div className="mx-auto w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                                <Search className="text-slate-400" size={24} />
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-900 mb-1">No resources found</h3>
+                            <p className="text-slate-500 mb-4">Try adjusting your search or filters.</p>
+                            <button onClick={() => {setSearchTerm(''); setActiveCategory('All')}} className="text-blue-600 font-bold hover:underline">Clear Filters</button>
                         </div>
                     )}
                 </div>
@@ -769,31 +869,26 @@
         }
 
         function CalendarView() {
-            const events = [
-                { date: '14 OCT', title: 'UTA Weekend', time: '0700 - 1600', location: 'Base Wide' },
-                { date: '21 OCT', title: 'PT Tests', time: '0800 - 1100', location: 'Running Track' },
-                { date: '01 NOV', title: 'Promotion Ceremony', time: '1400 - 1500', location: 'Hangar 3' },
-            ];
-
+            // Using the EVENTS const data
             return (
-                <div className="w-full max-w-full mx-auto px-4 py-12">
-                    <h2 className="text-3xl font-bold text-slate-900 mb-8">Development Calendar</h2>
+                <div className="px-4 py-12 animate-fade-in">
+                    <h2 className="text-3xl font-bold text-slate-900 mb-10 text-center md:text-left">Development Calendar</h2>
                     
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                        {events.map((evt, i) => (
-                            <div key={i} className="flex flex-col sm:flex-row items-center p-6 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
-                                <div className="flex-shrink-0 w-16 h-16 bg-blue-50 rounded-lg flex flex-col items-center justify-center text-blue-800 font-bold mr-6 mb-4 sm:mb-0">
-                                    <span className="text-xs uppercase text-blue-400">{evt.date.split(' ')[1]}</span>
-                                    <span className="text-xl">{evt.date.split(' ')[0]}</span>
+                    <div className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+                        {EVENTS.map((evt, i) => (
+                            <div key={i} className="flex flex-col md:flex-row items-center p-6 border-b border-slate-100 last:border-0 hover:bg-blue-50/30 transition-colors group">
+                                <div className="flex-shrink-0 w-20 h-20 bg-blue-50 rounded-2xl flex flex-col items-center justify-center text-blue-800 font-bold mr-0 md:mr-8 mb-4 md:mb-0 shadow-sm group-hover:scale-105 transition-transform">
+                                    <span className="text-xs uppercase text-blue-400 font-bold tracking-wider">{evt.date.split(' ')[1]}</span>
+                                    <span className="text-2xl">{evt.date.split(' ')[0]}</span>
                                 </div>
-                                <div className="flex-grow text-center sm:text-left">
-                                    <h3 className="text-lg font-bold text-slate-800">{evt.title}</h3>
-                                    <div className="flex items-center justify-center sm:justify-start space-x-4 mt-2 text-sm text-slate-500">
-                                        <span className="flex items-center"><Clock size={14} className="mr-1"/> {evt.time}</span>
-                                        <span className="flex items-center"><MapPin size={14} className="mr-1"/> {evt.location}</span>
+                                <div className="flex-grow text-center md:text-left">
+                                    <h3 className="text-xl font-bold text-slate-800 group-hover:text-blue-700 transition-colors">{evt.title}</h3>
+                                    <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-4 mt-2 text-sm text-slate-500 font-medium">
+                                        <span className="flex items-center bg-slate-100 px-3 py-1 rounded-full"><Clock size={14} className="mr-2"/> {evt.time}</span>
+                                        <span className="flex items-center bg-slate-100 px-3 py-1 rounded-full"><MapPin size={14} className="mr-2"/> {evt.location}</span>
                                     </div>
                                 </div>
-                                <button className="mt-4 sm:mt-0 px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium hover:bg-white hover:border-blue-500 hover:text-blue-500 transition-all">
+                                <button className="mt-4 md:mt-0 px-6 py-2 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-blue-600 hover:border-blue-600 hover:text-white transition-all shadow-sm">
                                     Details
                                 </button>
                             </div>
